@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2>{{ group.name }}</h2>
+      <p>Owner: {{ group.owner.username }}</p>
+    </div>
+    <div>
+      <a class="btn btn-secondary me-2" href="{{ url_for('import_csv', group_id=group.id) }}">Import CSV</a>
+      <a class="btn btn-secondary" href="{{ url_for('add_expense', group_id=group.id) }}">Add expense</a>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">Member balances</div>
+        <div class="card-body">
+          <table class="table table-sm">
+            <thead><tr><th>Name</th><th>Paid</th><th>Owed</th><th>Net</th></tr></thead>
+            <tbody>
+              {% for item in balances.values() %}
+                <tr>
+                  <td>{{ item.user.username }}</td>
+                  <td>₹{{ '%.2f'|format(item.paid) }}</td>
+                  <td>₹{{ '%.2f'|format(item.owed) }}</td>
+                  <td class="{% if item.net >= 0 %}text-success{% else %}text-danger{% endif %}">₹{{ '%.2f'|format(item.net) }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card mb-4">
+        <div class="card-header">Suggested settlement</div>
+        <div class="card-body">
+          {% if instructions %}
+            <ul class="list-group list-group-flush">
+              {% for instruction in instructions %}
+                <li class="list-group-item">{{ instruction.from.username }} pays {{ instruction.to.username }} ₹{{ '%.2f'|format(instruction.amount) }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No net debts. Everyone is balanced.</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card mb-4">
+        <div class="card-header">Record payment</div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('add_settlement', group_id=group.id) }}">
+            <div class="row">
+              <div class="col-md-5 mb-3"><input type="text" class="form-control" name="from_user" placeholder="From" required></div>
+              <div class="col-md-5 mb-3"><input type="text" class="form-control" name="to_user" placeholder="To" required></div>
+              <div class="col-md-2 mb-3"><input type="number" step="0.01" class="form-control" name="amount" placeholder="₹" required></div>
+            </div>
+            <div class="mb-3"><input type="date" class="form-control" name="date" required></div>
+            <div class="mb-3"><textarea class="form-control" name="notes" rows="2" placeholder="Notes"></textarea></div>
+            <button class="btn btn-primary">Create settlement</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">Membership timeline</div>
+        <div class="card-body">
+          <table class="table table-sm mb-3">
+            <thead><tr><th>Name</th><th>Joined</th><th>Left</th></tr></thead>
+            <tbody>
+              {% for membership in memberships %}
+                <tr>
+                  <td>{{ membership.user.username }}</td>
+                  <td>{{ membership.joined_at }}</td>
+                  <td>{{ membership.left_at or 'Active' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <form method="post" action="{{ url_for('add_member', group_id=group.id) }}">
+            <div class="mb-3"><input type="text" class="form-control" name="member_name" placeholder="Member name" required></div>
+            <div class="row">
+              <div class="col-md-6 mb-3"><input type="date" class="form-control" name="joined_at" required></div>
+              <div class="col-md-6 mb-3"><input type="date" class="form-control" name="left_at" placeholder="Left date"></div>
+            </div>
+            <button class="btn btn-secondary">Add membership event</button>
+          </form>
+        </div>
+      </div>
+      <div class="card mb-4">
+        <div class="card-header">Recent expenses</div>
+        <div class="card-body">
+          {% if group.expenses %}
+            <table class="table table-sm">
+              <thead><tr><th>Date</th><th>Description</th><th>Paid by</th><th>Amount</th></tr></thead>
+              <tbody>
+                {% for expense in group.expenses[-10:] %}
+                  <tr>
+                    <td>{{ expense.date }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{{ expense.paid_by_user.username }}</td>
+                    <td>{{ expense.currency }} {{ '%.2f'|format(expense.raw_amount) }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No expenses yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

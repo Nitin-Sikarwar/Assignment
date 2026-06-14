@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div>
+    <h2>Review imported rows for {{ group.name }}</h2>
+    <p>Review the parsed expenses before saving them to the group.</p>
+    <form method="post" action="{{ url_for('confirm_import', group_id=group.id) }}">
+      <table class="table table-sm">
+        <thead><tr><th>Keep</th><th>Date</th><th>Description</th><th>Paid by</th><th>Amount</th><th>Split</th><th>Notes</th><th>Errors</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+            <tr class="{% if row.errors %}table-warning{% endif %}">
+              <td><input type="checkbox" name="keep_{{ loop.index0 }}" checked></td>
+              <td>{{ row.date or 'invalid' }}</td>
+              <td>{{ row.description or row.raw.description }}</td>
+              <td>{{ row.paid_by.username if row.paid_by else row.raw.paid_by }}</td>
+              <td>{{ row.currency }} {{ '%.2f'|format(row.amount) }}</td>
+              <td>{{ row.split_type }}</td>
+              <td>{{ row.notes }}</td>
+              <td>{{ row.errors|join(', ') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button class="btn btn-success">Import selected rows</button>
+    </form>
+  </div>
+{% endblock %}
