@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+shared_expenses.db
+instance/
+.env
