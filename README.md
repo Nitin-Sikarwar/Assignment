@@ -42,5 +42,5 @@ A Flask-based shared expenses tracker for flatmates.
 - `IMPORT_REPORT.md`: CSV import anomaly report
 
 ## Deployment and repository status
-- Public deployed URL: https://shared-expenses-app-jrs6.onrender.com
+- Public deployed URL:https://assignmentt-5u6q.onrender.com/
 - Remote GitHub repository: https://github.com/Nitin-Sikarwar/Assignment
