@@ -45,9 +45,16 @@ def parse_date_safe(raw_text):
 
 
 def parse_participants(raw):
-    if not raw:
+    if raw is None or raw == '':
         return []
-    return [normalize_name(name) for name in NAME_SPLIT_RE.split(raw) if name.strip()]
+    if isinstance(raw, (str, bytes, bytearray)):
+        raw_text = raw.decode() if isinstance(raw, (bytes, bytearray)) else raw
+        return [normalize_name(name) for name in NAME_SPLIT_RE.split(raw_text) if name.strip()]
+    try:
+        iterator = iter(raw)
+    except TypeError:
+        return [normalize_name(str(raw))]
+    return [normalize_name(str(name)) for name in raw if name is not None and str(name).strip()]
 
 
 def parse_split_map(raw):
@@ -136,8 +143,17 @@ def compute_expense_shares(split_type, amount, participants, split_details):
 
 
 def normalize_expense_key(row):
+    date_value = row.get('date')
+    if isinstance(date_value, str):
+        date_key = date_value
+    elif isinstance(date_value, datetime):
+        date_key = date_value.date().isoformat()
+    elif isinstance(date_value, date):
+        date_key = date_value.isoformat()
+    else:
+        date_key = None
     return (
-        row['date'].isoformat() if row.get('date') else None,
+        date_key,
         row.get('description', '').strip().lower(),
         normalize_name(row.get('paid_by', '')),
         round(parse_amount(row.get('amount', 0.0)), 2),
